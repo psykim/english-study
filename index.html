@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>에스텔 영어 공부</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#f5f2ea" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#16181a" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <h1>에스텔 영어 공부</h1>
+  <div class="top-right">
+    <span id="syncState" class="sync-state" title="진도 동기화 상태"></span>
+    <button id="btnDevices" class="ghost" type="button">기기 연결</button>
+  </div>
+</header>
+
+<main class="layout">
+  <section class="stage" aria-label="영상">
+    <div id="playerBox" class="player-box"><div id="player"></div></div>
+    <div id="embedError" class="embed-error" hidden>
+      이 영상은 앱 안에서 재생할 수 없게 설정되어 있습니다.
+      <a id="embedLink" target="_blank" rel="noopener">유튜브에서 열기</a>
+    </div>
+
+    <div class="now">
+      <div class="now-num" id="nowNum"></div>
+      <h2 id="nowTitle">영상을 불러오는 중…</h2>
+    </div>
+
+    <div class="controls">
+      <div class="row">
+        <button id="btnPrev" type="button">◀ 이전</button>
+        <button id="btnBack" type="button" title="5초 뒤로 (←)">5초 뒤로</button>
+        <button id="btnFwd" type="button" title="5초 앞으로 (→)">5초 앞으로</button>
+        <button id="btnNext" type="button">다음 ▶</button>
+      </div>
+      <div class="row">
+        <span class="label">속도</span>
+        <div class="seg" id="speeds" role="group" aria-label="재생 속도">
+          <button type="button" data-s="0.75">0.75</button>
+          <button type="button" data-s="1">1.0</button>
+          <button type="button" data-s="1.25">1.25</button>
+          <button type="button" data-s="1.5">1.5</button>
+        </div>
+        <button id="btnAB" type="button" title="듣고 싶은 구간을 계속 되풀이합니다">구간 반복</button>
+      </div>
+      <div class="row">
+        <label class="check"><input type="checkbox" id="chkDone"> 다 봤음</label>
+        <label class="check"><input type="checkbox" id="chkStar"> 다시 볼 것</label>
+        <label class="check"><input type="checkbox" id="chkAuto"> 끝나면 다음 영상</label>
+      </div>
+    </div>
+  </section>
+
+  <section class="side" aria-label="목록">
+    <nav id="chips" class="chips" aria-label="목록 고르기"></nav>
+
+    <div class="progress">
+      <div class="progress-text"><span id="progText"></span>
+        <button id="btnResume" class="link" type="button">안 본 첫 영상으로 ↓</button></div>
+      <div class="bar"><div id="progBar"></div></div>
+    </div>
+
+    <div class="filters">
+      <input id="q" type="search" placeholder="제목 검색" autocomplete="off">
+      <label class="check"><input type="checkbox" id="chkUnseen"> 안 본 것만</label>
+      <button id="btnOrder" class="link" type="button"></button>
+    </div>
+
+    <ol id="list" class="list"></ol>
+    <p id="empty" class="empty" hidden>해당하는 영상이 없습니다.</p>
+    <footer class="foot">영상은 유튜브 「에스텔잉글리쉬」 채널의 것이며 이 앱은 목록과 진도만 관리합니다.
+      <span id="fetched"></span></footer>
+  </section>
+</main>
+
+<dialog id="dlg">
+  <h3>다른 기기에서 이어 보기</h3>
+  <p>폰 카메라로 아래 QR을 찍어 한 번만 열면, 그 뒤로는 맥과 폰의 진도가 서로 맞춰집니다.</p>
+  <div id="qr" class="qr"></div>
+  <input id="linkText" readonly>
+  <div class="row">
+    <button id="btnCopy" type="button">연결 주소 복사</button>
+    <button id="btnClose" type="button" class="ghost">닫기</button>
+  </div>
+  <p class="hint">이 주소를 아는 사람은 진도를 볼 수 있으니 남에게 보내지 마세요.
+    폰에서는 브라우저 메뉴의 「홈 화면에 추가」로 앱처럼 쓸 수 있습니다.</p>
+</dialog>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js" defer></script>
+<script src="core.js" defer></script>
+<script src="app.js" defer></script>
+</body>
+</html>
