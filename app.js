@@ -20,7 +20,11 @@
   let state = merge(emptyState(), ls.get(LS_STATE, null));
   let pref = Object.assign({ speed: 1, auto: true, newestFirst: false }, ls.get(LS_PREF, {}));
   let syncKey = ls.get(LS_KEY, null);
-  let listKey = 'all', curId = null;
+  let listKey = 'estell/all', curId = null;   // 목록 열쇠 = 채널/목록
+  const shortIds = new Set();
+  const chOf = (key) => key.split('/')[0];
+  // 채널이 하나뿐이던 때 저장된 열쇠('all'·'pl:…')는 첫 채널 것으로 읽는다
+  const normKey = (key) => (key && key.includes('/') ? key : 'estell/' + key);
   let player = null, playerReady = false, pendingLoad = null;
   let ab = { a: null, b: null };
   const rowEls = new Map();
@@ -81,29 +85,55 @@
 
   /* ---------- 목록 ---------- */
   function buildLists() {
-    for (const k of ['videos', 'shorts', 'streams']) for (const v of data[k]) byId.set(v.id, v);
-    const add = (key, name, ids, short) => lists.set(key, { key, name, ids, short: !!short });
-    add('all', '전체 영상', data.videos.map((v) => v.id));
-    add('star', '다시 볼 것', []);
-    for (const p of data.playlists) add('pl:' + p.id, p.t, p.v.filter((id) => byId.has(id)));
-    add('shorts', '쇼츠', data.shorts.map((v) => v.id), true);
-    if (data.streams.length) add('streams', '라이브 방송', data.streams.map((v) => v.id));
+    for (const c of data.channels) {
+      for (const k of ['videos', 'shorts', 'streams']) for (const v of c[k]) byId.set(v.id, v);
+      for (const v of c.shorts) shortIds.add(v.id);
+      const own = new Set([...c.videos, ...c.shorts, ...c.streams].map((v) => v.id));
+      const add = (key, name, ids) => lists.set(c.key + '/' + key, { key: c.key + '/' + key, ch: c.key, name, ids, own });
+      add('all', '전체 영상', c.videos.map((v) => v.id));
+      add('star', '다시 볼 것', []);
+      for (const p of c.playlists) add('pl:' + p.id, p.t, p.v.filter((id) => byId.has(id)));
+      if (c.shorts.length) add('shorts', '쇼츠', c.shorts.map((v) => v.id));
+      if (c.streams.length) add('streams', '라이브 방송', c.streams.map((v) => v.id));
+    }
   }
   function idsOf(key) {
     const l = lists.get(key);
-    if (key === 'star') return [...byId.keys()].filter((id) => rec(id)[3]);
-    if (key === 'all' && pref.newestFirst) return l.ids.slice().reverse();
+    if (key.endsWith('/star')) return [...l.own].filter((id) => rec(id)[3]);
+    if (key.endsWith('/all') && pref.newestFirst) return l.ids.slice().reverse();
     return l.ids;
   }
+  function renderChannels() {
+    const nav = $('channels'); nav.textContent = '';
+    for (const c of data.channels) {
+      const b = document.createElement('button');
+      const on = c.key === chOf(listKey);
+      b.type = 'button'; b.className = on ? 'on' : '';
+      b.setAttribute('aria-pressed', on);
+      const done = c.videos.filter((v) => rec(v.id)[1]).length;
+      const name = document.createElement('span'); name.textContent = c.name;
+      const cnt = document.createElement('small'); cnt.textContent = done + ' / ' + c.videos.length + '편';
+      b.append(name, cnt);
+      b.onclick = () => {
+        if (on) return;
+        // 그 채널에서 마지막에 보던 목록으로 돌아간다
+        listKey = (pref.lastList && lists.has(pref.lastList[c.key]) && pref.lastList[c.key]) || c.key + '/all';
+        $('q').value = ''; renderChips(); renderList(); showNow(); scrollToCurrent();
+      };
+      nav.appendChild(b);
+    }
+  }
   function renderChips() {
+    renderChannels();
     const nav = $('chips'); nav.textContent = '';
     for (const l of lists.values()) {
+      if (l.ch !== chOf(listKey)) continue;
       const b = document.createElement('button');
       b.type = 'button'; b.className = 'chip' + (l.key === listKey ? ' on' : '');
-      const n = l.key === 'star' ? idsOf('star').length : l.ids.length;
+      const n = idsOf(l.key).length;
       b.textContent = l.name + ' ' + n;
       b.setAttribute('aria-pressed', l.key === listKey);
-      b.onclick = () => { listKey = l.key; $('q').value = ''; renderChips(); renderList(); scrollToCurrent(); };
+      b.onclick = () => { listKey = l.key; pref.lastList = Object.assign({}, pref.lastList, { [l.ch]: l.key }); ls.set(LS_PREF, pref); $('q').value = ''; renderChips(); renderList(); showNow(); scrollToCurrent(); };
       nav.appendChild(b);
     }
   }
@@ -138,7 +168,7 @@
     });
     ol.appendChild(frag);
     $('empty').hidden = shown > 0;
-    $('btnOrder').hidden = listKey !== 'all';
+    $('btnOrder').hidden = !listKey.endsWith('/all');
     $('btnOrder').textContent = pref.newestFirst ? '최신순 · 바꾸기' : '오래된 순 · 바꾸기';
     renderProgress();
   }
@@ -158,6 +188,8 @@
     $('progText').textContent = lists.get(listKey).name + ' ' + done + ' / ' + ids.length + '편 완료';
     $('progBar').style.width = (ids.length ? (done / ids.length) * 100 : 0) + '%';
     $('btnResume').hidden = !firstUnseen(ids, state.v);
+    const c = data.channels.find((x) => x.key === chOf(listKey));
+    $('fetched').textContent = '목록 기준일 ' + data.fetched + ' · ' + c.name + ' 영상 ' + c.videos.length + '편';
   }
   // 넓은 화면은 목록만 따로 구르므로 항상 맞춰 주고, 폰은 사용자가 요청했을 때만 페이지를 옮긴다
   const wide = window.matchMedia('(min-width: 960px)');
@@ -170,12 +202,12 @@
   function showNow() {
     const v = byId.get(curId); if (!v) return;
     const ids = idsOf(listKey), i = ids.indexOf(curId);
-    $('nowNum').textContent = i >= 0 ? lists.get(listKey).name + ' ' + (i + 1) + ' / ' + ids.length : '';
+    $('nowNum').textContent = i >= 0 ? lists.get(listKey).name + ' ' + (i + 1) + ' / ' + ids.length : '다른 목록의 영상';
     $('nowTitle').textContent = v.t;
     const r = rec(curId);
     $('chkDone').checked = !!r[1]; $('chkStar').checked = !!r[3];
-    $('btnPrev').disabled = i <= 0; $('btnNext').disabled = i < 0 || i >= ids.length - 1;
-    document.title = v.t + ' — 에스텔 영어 공부';
+    $('btnPrev').disabled = i <= 0; $('btnNext').disabled = i >= ids.length - 1 || !ids.length;
+    document.title = v.t + ' — 영어 공부';
   }
   function play(id, autoplay) {
     if (!byId.has(id)) return;
@@ -186,7 +218,7 @@
     persist(true);
     resetAB();
     $('embedError').hidden = true;
-    $('playerBox').classList.toggle('short', data.shorts.some((s) => s.id === id));
+    $('playerBox').classList.toggle('short', shortIds.has(id));
     paintRow(prev); paintRow(id); showNow();
     const r = rec(id), v = byId.get(id);
     // 다 본 영상이나 거의 끝난 위치는 처음부터
@@ -197,8 +229,8 @@
   }
   function step(d) {
     const ids = idsOf(listKey), i = ids.indexOf(curId);
-    const next = ids[i + d];
-    if (i >= 0 && next) { play(next, true); scrollToCurrent(false, 'nearest'); }
+    const next = i >= 0 ? ids[i + d] : (d > 0 ? firstUnseen(ids, state.v) || ids[0] : null);
+    if (next) { play(next, true); scrollToCurrent(false, 'nearest'); }
   }
   function savePos() {
     if (!playerReady || !curId || !player.getCurrentTime) return;
@@ -228,7 +260,7 @@
     if (e.data === 2) { savePos(); paintRow(curId); }
     if (e.data === 0) {
       setRec(curId, { done: true, pos: 0 });
-      paintRow(curId); showNow(); renderProgress();
+      paintRow(curId); showNow(); renderProgress(); renderChannels();
       persist(true);
       if (pref.auto) step(1);
     }
@@ -295,8 +327,8 @@
       pref.speed = s; ls.set(LS_PREF, pref); paintPrefs();
       if (playerReady) player.setPlaybackRate(s);
     };
-    $('chkDone').onchange = (e) => { setRec(curId, { done: e.target.checked, pos: 0 }); persist(true); paintRow(curId); renderProgress(); };
-    $('chkStar').onchange = (e) => { setRec(curId, { star: e.target.checked }); persist(true); paintRow(curId); renderChips(); if (listKey === 'star') renderList(); };
+    $('chkDone').onchange = (e) => { setRec(curId, { done: e.target.checked, pos: 0 }); persist(true); paintRow(curId); renderProgress(); renderChannels(); };
+    $('chkStar').onchange = (e) => { setRec(curId, { star: e.target.checked }); persist(true); paintRow(curId); renderChips(); if (listKey.endsWith('/star')) renderList(); };
     $('chkAuto').onchange = (e) => { pref.auto = e.target.checked; ls.set(LS_PREF, pref); };
     $('chkUnseen').onchange = renderList;
     $('q').oninput = renderList;
@@ -339,7 +371,7 @@
   }
   function restoreCurrent() {
     const c = state.cur;
-    if (c && byId.has(c.id) && lists.has(c.l)) { listKey = c.l; }
+    if (c && byId.has(c.id) && lists.has(normKey(c.l))) { listKey = normKey(c.l); }
     const ids = idsOf(listKey);
     const id = c && byId.has(c.id) ? c.id : firstUnseen(ids, state.v) || ids[0];
     renderChips(); renderList();
@@ -359,7 +391,6 @@
     ]);
     data = d;
     buildLists();
-    $('fetched').textContent = '목록 기준일 ' + data.fetched + ' · 영상 ' + data.videos.length + '편';
     restoreCurrent();
     if (dirty) schedulePush(1500);
     const s = document.createElement('script');

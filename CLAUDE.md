@@ -1,8 +1,8 @@
-# 에스텔 영어 공부 — 프로젝트 규칙
+# 영어 공부 — 프로젝트 규칙
 
 > 공통 연결 지도는 ../../CLAUDE.md (소프트웨어 허브). 이 파일은 이 앱에만 해당하는 것을 적는다.
 
-유튜브 「에스텔잉글리쉬」 채널 영상을 올라온 순서대로 보며 공부하는 웹앱. 맥·안드로이드폰 브라우저에서 쓰고
+사용자가 구독하는 유튜브 영어 채널(에스텔잉글리쉬·제니리 영어)의 영상을 올라온 순서대로 보며 공부하는 웹앱. 맥·안드로이드폰 브라우저에서 쓰고
 진도(다 봤음·이어 볼 위치·다시 볼 것)는 두 기기가 공유한다. 사용자는 플랜비포유 대표(의사, 비개발자).
 
 ## 세션 시작 절차
@@ -10,7 +10,9 @@
 
 ## 구조 (빌드 단계 없음 — 파일을 고치면 그대로 배포물)
 - `index.html`·`style.css`·`app.js`(화면·재생·동기화)·`core.js`(순수 로직: 합치기·시간 표기 — 시험 대상)
-- `data/videos.json` — 영상·쇼츠·재생목록 목록(오래된 것부터). `tools/update_videos.py`가 만든다.
+- `data/videos.json` — 채널별 영상·쇼츠·재생목록(오래된 것부터). `tools/update_videos.py`가 만든다.
+  **채널 추가**는 그 스크립트의 `CHANNELS`에 한 줄(key·이름·주소·재생목록 순서) 넣고 돌리면 끝 — 앱 코드는 안 고친다.
+  목록 열쇠는 `채널key/목록`(예 `jenny/all`). 채널이 하나뿐이던 때의 열쇠(`all`)는 `estell/`로 읽는다(`normKey`).
 - 진도 저장: Supabase 프로젝트 `english-study`(ref `zvrrhhgxcbbqiphgxnap`, 서울). 표 `progress`는 RLS로 잠겨 있고
   `get_progress`·`save_progress` 함수로만 접근한다. 기기는 32자 열쇠(`#k=`)로 같은 줄을 공유한다.
 - 재생: YouTube IFrame Player API(공식 퍼가기). 영상을 내려받거나 다시 올리지 않는다.
@@ -19,7 +21,7 @@
 ```bash
 node --test tests/*.test.js            # 시험 — 커밋 전 통과
 python3 -m http.server 8765            # 로컬 확인 → http://localhost:8765/
-python3 tools/update_videos.py         # 채널 새 영상 반영(yt-dlp) → 편수 변화 출력, 커밋·push하면 배포
+python3 tools/update_videos.py         # 모든 채널 새 영상 반영(yt-dlp) → 편수 변화 출력, 커밋·push하면 배포
 git push origin main                   # 배포: GitHub Pages가 main 루트를 그대로 내보낸다(1~2분)
 ```
 - 주소: https://psykim.github.io/english-study/ · 저장소: https://github.com/psykim/english-study (공개 — Pages 무료 조건)
