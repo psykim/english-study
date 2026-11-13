@@ -136,6 +136,21 @@
       b.onclick = () => { listKey = l.key; pref.lastList = Object.assign({}, pref.lastList, { [l.ch]: l.key }); ls.set(LS_PREF, pref); $('q').value = ''; renderChips(); renderList(); showNow(); scrollToCurrent(); };
       nav.appendChild(b);
     }
+    paintMore(true);
+  }
+  // 넓은 화면: 접힌 두 줄에 다 들어가면 단추를 숨기고, 고른 목록이 접힌 부분에 있으면 펴 둔다
+  function paintMore(auto) {
+    const nav = $('chips'), btn = $('btnMore');
+    const wasOpen = nav.classList.contains('open');
+    nav.classList.remove('open');
+    const fits = nav.scrollHeight <= nav.clientHeight + 2;
+    const on = nav.querySelector('.chip.on');
+    const hiddenOn = on && on.offsetTop + on.offsetHeight > nav.offsetTop + nav.clientHeight;
+    const open = !fits && (wasOpen || (auto === true && hiddenOn));   // 손으로 접은 것은 그대로 둔다
+    nav.classList.toggle('open', open);
+    btn.hidden = fits;
+    btn.textContent = open ? '목록 접기 ▴' : '목록 더 보기 ▾';
+    btn.setAttribute('aria-expanded', open);
   }
   function renderList() {
     const ol = $('list'); ol.textContent = ''; rowEls.clear();
@@ -338,6 +353,8 @@
       if (!rowEls.has(id)) { $('q').value = ''; renderList(); }
       play(id, true); scrollToCurrent(true);
     };
+    $('btnMore').onclick = () => { $('chips').classList.toggle('open'); paintMore(false); };
+    window.addEventListener('resize', paintMore);
     $('btnDevices').onclick = openDevices;
     $('btnClose').onclick = () => $('dlg').close();
     $('btnCopy').onclick = async () => {
