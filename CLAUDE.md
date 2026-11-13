@@ -27,7 +27,7 @@ git push origin main                   # 배포: GitHub Pages가 main 루트를 
 - 주소: https://psykim.github.io/english-study/ · 저장소: https://github.com/psykim/english-study (공개 — Pages 무료 조건)
 
 ## 절대 규칙 (실사고에서 나온 것만 — 사고가 날 때마다 추가)
-- (아직 없음)
+- 화면 배치를 고치면 **고친 크기만이 아니라 맥(1280)·폰(400) 둘 다** 다시 열어 본다 — 2026-11-13 폰용으로 채널 탭에 가로 스크롤을 넣었더니 넓은 화면에서 탭이 눌려 목록에 가려진 채 배포됐다(세로 flex 안에서 overflow가 붙은 칸은 줄어든다 → `.side > :not(.list) { flex: none }`).
 
 ## 주의 (사고는 아니지만 구조상 지킬 것)
 - 저장소가 공개다. 비밀 키를 넣지 않는다 — `app.js`의 Supabase 키는 공개용(publishable) 키뿐이다.
