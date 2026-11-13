@@ -57,6 +57,30 @@
         <label class="check"><input type="checkbox" id="chkAuto"> 끝나면 다음 영상</label>
       </div>
     </div>
+
+    <details class="practice" id="practice">
+      <summary>🗣 말하기 연습 <span class="sub">본 내용을 AI와 직접 말해 보기</span></summary>
+      <div class="seg" id="pMode" role="group" aria-label="연습 방식">
+        <button type="button" data-m="sim" class="on" aria-pressed="true">상황 연습</button>
+        <button type="button" data-m="ko" aria-pressed="false">한국어로 먼저</button>
+      </div>
+      <div class="pane" data-pane="sim">
+        <label class="field">연습 상황 <span class="sub">처음엔 영상 제목 — 고쳐 써도 됩니다</span>
+          <textarea id="pSituation" rows="2"></textarea></label>
+      </div>
+      <div class="pane" data-pane="ko" hidden>
+        <label class="field">내 역할<input id="pRole" placeholder="예: 15년 차 팀장"></label>
+        <label class="field">상대<input id="pPartner" placeholder="예: 해외 거래처 담당자"></label>
+        <label class="field">하고 싶은 말(한국어)
+          <textarea id="pMemo" rows="3" placeholder="예: 정중하지만 단호하게 일정을 2주 미루자고 말하고 싶다"></textarea></label>
+      </div>
+      <div class="row">
+        <button type="button" id="btnClaude" class="on">복사하고 Claude 열기</button>
+        <button type="button" id="btnGpt">복사하고 ChatGPT 열기</button>
+      </div>
+      <p class="hint" id="pHint">열린 AI 창에 붙여 넣으면(맥 ⌘V · 폰은 길게 눌러 붙여넣기) 연습이 시작됩니다. 목소리로 답해도 됩니다.</p>
+      <textarea id="pFallback" class="fallback" rows="8" readonly hidden aria-label="연습 글 — 복사가 막혀 직접 복사"></textarea>
+    </details>
   </section>
 
   <section class="side" aria-label="목록">

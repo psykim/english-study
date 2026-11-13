@@ -36,7 +36,45 @@
     return Array.from(b, (x) => x.toString(16).padStart(2, '0')).join('');
   }
 
-  const api = { emptyState, merge, fmtTime, firstUnseen, newKey };
+  // 말하기 연습(2026-11-13, 계획 docs/plans/2026-11-13-speaking-practice.html) —
+  // 앱은 AI를 부르지 않는다(공개 저장소라 키 없음). 이 글을 복사해 대표가 Claude·ChatGPT에 붙여 넣는다.
+  const SIM_TEMPLATE = [
+    '영어 말하기 연습을 도와줘. 나는 한국인 성인 학습자야.',
+    '오늘 본 강의: 「{title}」',
+    '연습 상황: {situation}',
+    '',
+    '1. 너는 이 상황의 상대역이야. 영어로 먼저 짧게 말을 걸어 줘.',
+    '2. 내가 영어로 답하면(틀려도, 단어만 말해도 돼) 대화를 잇기 전에 한국어로 짧게 알려 줘:',
+    '   - 내가 하려던 말을 네가 이해한 뜻',
+    '   - 이 상황에서 원어민이 실제로 할 자연스러운 말 2가지(조금 격식 있게 / 편하게)',
+    '   - 내 문장에서 고칠 것 딱 한 가지',
+    '3. 그다음 상대역으로 돌아가 영어로 대화를 이어 가.',
+    '4. 6번 주고받으면 끝내고, 오늘 쓴 표현 3개를 정리해 줘.',
+    '나는 목소리로 답할 수도 있어.',
+  ].join('\n');
+  const KO_TEMPLATE = [
+    '영어 표현을 도와줘. 나는 한국인 성인이고, 생각은 한국어로 먼저 정리했어.',
+    '- 내 역할: {role}',
+    '- 상대: {partner}',
+    '- 하고 싶은 말(한국어): {memo}',
+    '',
+    '1. 직역하지 말고, 이 장면에서 실제로 쓸 자연스러운 영어로 바꿔 줘(정중한 판 / 편한 판).',
+    '2. 한국어와 영어가 다르게 표현하는 핵심 단어 2~3개를 비교해 줘.',
+    '3. 내가 소리 내어 따라 말할 한 문장을 골라 줘.',
+    '4. 내가 그 문장을 다시 말해 보내면 고칠 점을 알려 줘.',
+  ].join('\n');
+
+  function buildPrompt(mode, f) {
+    f = f || {};
+    const fill = (s) => String(s == null ? '' : s).trim() || '(비워 둠)';
+    const vals = mode === 'ko'
+      ? { role: fill(f.role), partner: fill(f.partner), memo: fill(f.memo) }
+      : { title: fill(f.title), situation: fill(String(f.situation || '').trim() || f.title) };
+    // 함수로 바꿔 넣는다 — 입력의 $&·$1 이 치환 패턴으로 읽히지 않게
+    return (mode === 'ko' ? KO_TEMPLATE : SIM_TEMPLATE).replace(/\{(\w+)\}/g, (_, k) => vals[k]);
+  }
+
+  const api = { emptyState, merge, fmtTime, firstUnseen, newKey, buildPrompt };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.Core = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

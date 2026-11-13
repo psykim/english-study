@@ -223,6 +223,45 @@
     $('chkDone').checked = !!r[1]; $('chkStar').checked = !!r[3];
     $('btnPrev').disabled = i <= 0; $('btnNext').disabled = i >= ids.length - 1 || !ids.length;
     document.title = v.t + ' — 영어 공부';
+    fillPractice(v);
+  }
+
+  /* ---------- 말하기 연습 (2026-11-13) ---------- */
+  // 앱은 AI를 부르지 않는다: 연습 글을 만들어 복사하고 AI 창을 연다. 고친 상황 글은 그 영상에서만, 이 탭이 열려 있는 동안만 기억한다.
+  const AI_URL = { claude: 'https://claude.ai/new', gpt: 'https://chatgpt.com/' };
+  const sitEdits = new Map();
+  let practiceMode = 'sim';
+  function fillPractice(v) {
+    $('pSituation').value = sitEdits.has(v.id) ? sitEdits.get(v.id) : v.t;
+    $('pFallback').hidden = true;
+  }
+  function setPracticeMode(m) {
+    practiceMode = m === 'ko' ? 'ko' : 'sim';
+    for (const b of $('pMode').querySelectorAll('button')) {
+      const on = b.dataset.m === practiceMode; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on);
+    }
+    for (const p of document.querySelectorAll('.practice .pane')) p.hidden = p.dataset.pane !== practiceMode;
+  }
+  function practiceText() {
+    const v = byId.get(curId) || {};
+    return Core.buildPrompt(practiceMode, {
+      title: v.t, situation: $('pSituation').value,
+      role: $('pRole').value, partner: $('pPartner').value, memo: $('pMemo').value,
+    });
+  }
+  function copyAndOpen(ai, btn) {
+    const text = practiceText();
+    // 복사는 클릭 순간(창이 바뀌기 전)에 시작해야 막히지 않는다 — 기다리지 않고 바로 새 창을 연다
+    let copied;
+    try { copied = navigator.clipboard.writeText(text); } catch (e) { copied = Promise.reject(e); }
+    window.open(AI_URL[ai], '_blank', 'noopener');
+    copied.then(() => {
+      const old = btn.textContent; btn.textContent = '복사했습니다 — 붙여 넣으세요';
+      setTimeout(() => { btn.textContent = old; }, 2500);
+    }).catch(() => {
+      // 복사가 막힌 브라우저: 글을 상자에 보여 주고 골라 둔다
+      const box = $('pFallback'); box.value = text; box.hidden = false; box.focus(); box.select();
+    });
   }
   function play(id, autoplay) {
     if (!byId.has(id)) return;
@@ -354,6 +393,10 @@
       if (!rowEls.has(id)) { $('q').value = ''; renderList(); }
       play(id, true); scrollToCurrent(true);
     };
+    $('pMode').onclick = (e) => { const b = e.target.closest('button'); if (b) setPracticeMode(b.dataset.m); };
+    $('pSituation').oninput = () => { if (curId) sitEdits.set(curId, $('pSituation').value); };
+    $('btnClaude').onclick = () => copyAndOpen('claude', $('btnClaude'));
+    $('btnGpt').onclick = () => copyAndOpen('gpt', $('btnGpt'));
     $('btnMore').onclick = () => { $('chips').classList.toggle('open'); paintMore(false); };
     window.addEventListener('resize', paintMore);
     $('btnDevices').onclick = openDevices;
