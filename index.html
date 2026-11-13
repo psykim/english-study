@@ -10,7 +10,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
 <header class="top">
@@ -60,9 +60,11 @@
   </section>
 
   <section class="side" aria-label="목록">
-    <nav id="channels" class="channels" aria-label="채널 고르기"></nav>
-    <nav id="chips" class="chips" aria-label="목록 고르기"></nav>
-    <button id="btnMore" class="link more" type="button" aria-controls="chips"></button>
+    <div class="sidehead">
+      <nav id="channels" class="channels" aria-label="채널 고르기"></nav>
+      <nav id="chips" class="chips" aria-label="목록 고르기"></nav>
+      <button id="btnMore" class="link more" type="button" aria-controls="chips"></button>
+    </div>
 
     <div class="progress">
       <div class="progress-text"><span id="progText"></span>
@@ -97,7 +99,7 @@
 </dialog>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js" defer></script>
-<script src="core.js" defer></script>
-<script src="app.js" defer></script>
+<script src="core.js?v=4" defer></script>
+<script src="app.js?v=4" defer></script>
 </body>
 </html>

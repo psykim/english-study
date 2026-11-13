@@ -234,6 +234,7 @@
     resetAB();
     $('embedError').hidden = true;
     $('playerBox').classList.toggle('short', shortIds.has(id));
+    document.body.classList.toggle('short', shortIds.has(id));
     paintRow(prev); paintRow(id); showNow();
     const r = rec(id), v = byId.get(id);
     // 다 본 영상이나 거의 끝난 위치는 처음부터
