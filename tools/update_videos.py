@@ -1,20 +1,24 @@
 #!/usr/bin/env python3
 """구독 채널들의 영상 목록을 새로 받아 data/videos.json을 다시 만든다 (yt-dlp 필요).
 채널 추가는 CHANNELS에 한 줄. 쓰기: python3 tools/update_videos.py   → 편수 변화를 출력한다. 그 뒤 커밋·push하면 사이트에 반영된다."""
-import datetime, json, pathlib, subprocess, sys
+import datetime, json, pathlib, re, subprocess, sys
 
 CHANNELS = [
     {"key": "estell", "name": "에스텔잉글리쉬", "url": "https://www.youtube.com/channel/UC0Wy2BjhsQP3gk2iuksCudw",
      "order": ["리스닝", "스피킹", "문장감각", "소리감각", "1분", "여행", "Frozen", "소설", "100%", "노하우", "수업소개"]},
     {"key": "jenny", "name": "제니리 영어", "url": "https://www.youtube.com/channel/UCadhrKFHh_9K62ETq18EAAQ",
      "order": ["영어패턴", "구동사", "숙어", "영문법", "원어민", "공부법"]},
+    {"key": "chips", "name": "칩스영어", "url": "https://www.youtube.com/channel/UCQSOd6CLxUvKnRoCwk3zkFA",
+     "order": ["영화", "셀럽"],
+     # 제목마다 붙는 「| 🎬 영화·미드 500장면 모음.zip」 꼬리와 재생목록 이름의 꾸밈을 뗀다
+     "title_strip": r"\s*\|\s*🎬.*$", "list_strip": r"\.zip$|\s*\|.*$"},
 ]
 OUT = pathlib.Path(__file__).resolve().parent.parent / "data" / "videos.json"
 HIDDEN = ("[Private video]", "[Deleted video]")
 
 
 def fetch(url):
-    r = subprocess.run(["yt-dlp", "--flat-playlist", "-J", url], capture_output=True, text=True,
+    r = subprocess.run(["yt-dlp", "--flat-playlist", "-J", "--extractor-args", "youtube:lang=ko", url], capture_output=True, text=True,
                        stdin=subprocess.DEVNULL, timeout=600)
     if r.returncode != 0:
         return []
@@ -47,6 +51,11 @@ def channel(c, old):
     playlists.sort(key=lambda p: next((i for i, k in enumerate(c["order"]) if k in p["t"]), 99))
     print("%s: 영상 %d→%d · 쇼츠 %d→%d · 재생목록 %d개" % (c["name"], was, len(videos),
                                                     len(old.get("shorts", [])), len(shorts), len(playlists)))
+    if c.get("title_strip"):
+        for v in videos + shorts + streams:
+            v["t"] = re.sub(c["title_strip"], "", v["t"]).strip() or v["t"]
+    for p in playlists:
+        p["t"] = re.sub(c.get("list_strip", "$^"), "", p["t"]).lstrip("🎬📂 ").strip() or p["t"]
     return {"key": c["key"], "name": c["name"], "videos": videos, "shorts": shorts, "streams": streams,
             "playlists": playlists}
 
