@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert');
-const { emptyState, merge, fmtTime, firstUnseen, newKey, buildPrompt } = require('../core.js');
+const { emptyState, merge, fmtTime, firstUnseen, newKey, buildPrompt, linkKeyAction } = require('../core.js');
 
 test('말하기 연습: 상황 연습 글에 영상 제목과 상황이 들어간다', () => {
   const p = buildPrompt('sim', { title: '입국심사 영어질문', situation: '방문 목적을 묻는다' });
@@ -53,3 +53,23 @@ test('안 본 첫 영상', () => {
   assert.equal(firstUnseen(['a'], { a: [1, 1, 0, 0] }), null);
 });
 test('열쇠는 32자 16진수', () => { assert.match(newKey(), /^[0-9a-f]{32}$/); });
+
+// 기기 연결 링크(2026-11-15 보안 점검): 남이 만든 링크를 열기만 해도 열쇠가 바뀌어 진도가 넘어가던 문제
+const K1 = 'a'.repeat(32), K2 = 'b'.repeat(32);
+test('기기 연결: 링크에 열쇠가 없으면 아무 일도 없다', () => {
+  assert.deepStrictEqual(linkKeyAction('', K1), { action: 'none', key: null });
+  assert.deepStrictEqual(linkKeyAction('#other=1', null), { action: 'none', key: null });
+});
+test('기기 연결: 링크 열쇠가 지금 열쇠와 같으면 묻지 않는다', () => {
+  assert.deepStrictEqual(linkKeyAction('#k=' + K1, K1), { action: 'same', key: K1 });
+});
+test('기기 연결: 열쇠가 이미 있는데 다른 열쇠가 오면 먼저 묻는다', () => {
+  assert.deepStrictEqual(linkKeyAction('#k=' + K2, K1), { action: 'ask-replace', key: K2 });
+});
+test('기기 연결: 처음 온 기기도 링크 열쇠는 묻고 받는다', () => {
+  assert.deepStrictEqual(linkKeyAction('#x=1&k=' + K2, null), { action: 'ask-first', key: K2 });
+});
+test('기기 연결: 형식이 틀린 열쇠(짧음·대문자·16진수 아님)는 무시한다', () => {
+  for (const h of ['#k=abc', '#k=' + 'A'.repeat(32), '#k=' + 'z'.repeat(32), '#k=' + 'a'.repeat(65)])
+    assert.strictEqual(linkKeyAction(h, K1).action, 'none', h);
+});

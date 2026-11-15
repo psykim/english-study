@@ -1,7 +1,7 @@
 /* 에스텔 영어 공부 — 화면·재생·동기화 */
 (function () {
   'use strict';
-  const { emptyState, merge, fmtTime, firstUnseen, newKey } = window.Core;
+  const { emptyState, merge, fmtTime, firstUnseen, newKey, linkKeyAction } = window.Core;
 
   // 공개용(게시 가능) 키. 진도 표는 직접 읽을 수 없고 열쇠를 아는 기기만 자기 줄을 읽고 쓴다.
   const SB_URL = 'https://zvrrhhgxcbbqiphgxnap.supabase.co/rest/v1/rpc/';
@@ -355,9 +355,13 @@
     $('dlg').showModal();
   }
   function adoptKeyFromHash() {
-    const m = /[#&]k=([0-9a-f]{20,64})\b/.exec(location.hash);
-    if (m) {
-      if (m[1] !== syncKey) { syncKey = m[1]; ls.set(LS_KEY, syncKey); dirty = true; }
+    // 링크의 열쇠는 묻고 나서만 받는다 — 남이 만든 링크를 열기만 해도 진도가 그 사람 열쇠로 올라가던 문제(2026-11-15).
+    const link = linkKeyAction(location.hash, syncKey);
+    if (link.action !== 'none') {
+      const ask = link.action === 'ask-replace'
+        ? '이 링크는 이 기기를 다른 진도 기록에 연결합니다.\n\n내가 내 다른 기기에서 직접 만든 「기기 연결」 링크일 때만 확인을 누르세요. 확인하면 이 기기의 진도가 그 기록과 합쳐지고, 그 링크를 아는 사람은 진도를 볼 수 있습니다.\n\n남에게 받은 링크라면 취소를 누르세요.'
+        : '이 링크는 이 기기를 이미 있는 진도 기록에 연결합니다.\n\n내가 내 다른 기기에서 직접 만든 「기기 연결」 링크일 때만 확인을 누르세요. 남에게 받은 링크라면 취소를 누르세요(새 기록으로 시작합니다).';
+      if (link.action !== 'same' && window.confirm(ask)) { syncKey = link.key; ls.set(LS_KEY, syncKey); dirty = true; }
       history.replaceState(null, '', location.pathname + location.search);
     }
     if (!syncKey) { syncKey = newKey(); ls.set(LS_KEY, syncKey); }

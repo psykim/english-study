@@ -36,6 +36,15 @@
     return Array.from(b, (x) => x.toString(16).padStart(2, '0')).join('');
   }
 
+  // 기기 연결 링크(#k=열쇠)를 어떻게 다룰지 정한다. 열쇠만 알면 진도를 읽고 쓸 수 있으므로,
+  // 남이 만든 링크를 여는 것만으로 열쇠가 바뀌면 안 된다(2026-11-15 보안 점검) — 바꾸기 전에 묻는다.
+  function linkKeyAction(hash, currentKey) {
+    const m = /[#&]k=([0-9a-f]{20,64})\b/.exec(hash || '');
+    if (!m) return { action: 'none', key: null };
+    if (m[1] === currentKey) return { action: 'same', key: m[1] };
+    return { action: currentKey ? 'ask-replace' : 'ask-first', key: m[1] };
+  }
+
   // 말하기 연습(2026-11-13, 계획 docs/plans/2026-11-13-speaking-practice.html) —
   // 앱은 AI를 부르지 않는다(공개 저장소라 키 없음). 이 글을 복사해 대표가 Claude·ChatGPT에 붙여 넣는다.
   const SIM_TEMPLATE = [
@@ -74,7 +83,7 @@
     return (mode === 'ko' ? KO_TEMPLATE : SIM_TEMPLATE).replace(/\{(\w+)\}/g, (_, k) => vals[k]);
   }
 
-  const api = { emptyState, merge, fmtTime, firstUnseen, newKey, buildPrompt };
+  const api = { emptyState, merge, fmtTime, firstUnseen, newKey, buildPrompt, linkKeyAction };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.Core = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
