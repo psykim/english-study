@@ -1,0 +1,76 @@
+{
+ "_설명": "「내가 모은 영상」 탭. 카카오톡 메모방에 모아 둔 영어 공부 영상을 묶음별로 적는다. 영상 주소 끝 11자리만 넣고 tools/update_videos.py 를 돌리면 제목·길이를 받아 data/videos.json 에 넣는다.",
+ "key": "picks",
+ "name": "내가 모은 영상",
+ "groups": [
+  {
+   "key": "sentences",
+   "name": "문장 모음 몰아듣기",
+   "ids": [
+    "tDVRHBuFS2w",
+    "Si6fwP8h0Zk",
+    "LW9U_MC1OEM",
+    "YmkjLWPXmWo",
+    "NPbs7YJ3xqA",
+    "HsL0I59CIxk",
+    "1gYPsgGCOtc",
+    "w0_lekSCilQ",
+    "fyO7DE0TI4E",
+    "-lYnk1Lvsdw",
+    "S6vf1iMMW7g",
+    "NlUVGm_gAIs",
+    "wMTdcaMrC9s",
+    "_H5c7AEmM78",
+    "BrVoVjKQu8U",
+    "TFnThlz9gaQ",
+    "rdQI0SpltW8",
+    "puwNbyv5CmQ",
+    "3TvhwUBGvCM",
+    "_VUMngGcI6U",
+    "bRU9CYgXp10"
+   ]
+  },
+  {
+   "key": "native",
+   "name": "원어민 영어로 듣기",
+   "ids": [
+    "G3y7W1OQx-o",
+    "Q4tdAWVAasA",
+    "cz4-UxEirOY",
+    "Qf6uZe4SDuY",
+    "Vz_Y31QTvxI",
+    "sKF1KoqCgsg",
+    "b_lmUnNilBI",
+    "YZcjgKjVyXk",
+    "OcCyvHXUvY4",
+    "-mDIIQfGfmY"
+   ]
+  },
+  {
+   "key": "howto",
+   "name": "공부법 강의",
+   "ids": [
+    "IEv_Yab8kwE",
+    "neZF9pm228k",
+    "dpQXLyNB9Wo",
+    "qk6LzBmJM4s",
+    "UwbnoAWLq3c",
+    "IToIhmC2RA0",
+    "sAtgz5lZbcQ",
+    "LlYG1PqwEDQ",
+    "YOozkBijSeE",
+    "V_8jQMEOkxw",
+    "dKAy7iF7rHI",
+    "dg7YIfQ3wzc"
+   ]
+  },
+  {
+   "key": "songs",
+   "name": "팝송",
+   "ids": [
+    "Y_jdjacru-8",
+    "Swv7zYdqdJA"
+   ]
+  }
+ ]
+}

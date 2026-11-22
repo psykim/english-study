@@ -12,6 +12,7 @@
 - `index.html`·`style.css`·`app.js`(화면·재생·동기화)·`core.js`(순수 로직: 합치기·시간 표기 — 시험 대상)
 - `data/videos.json` — 채널별 영상·쇼츠·재생목록(오래된 것부터). `tools/update_videos.py`가 만든다.
   **채널 추가**는 그 스크립트의 `CHANNELS`에 한 줄(key·이름·주소·재생목록 순서) 넣고 돌리면 끝 — 앱 코드는 안 고친다.
+  **「내가 모은 영상」 탭**(`picks`)은 `data/picks.json`(묶음별 영상 열쇠 11자리)에서 같은 스크립트가 만든다 — 대표가 카카오톡 메모방(김기웅)에 모은 영어 영상. 영상 하나 더하기는 열쇠만 넣고 스크립트를 돌린다(이미 받은 영상은 다시 묻지 않음).
   목록 열쇠는 `채널key/목록`(예 `jenny/all`). 채널이 하나뿐이던 때의 열쇠(`all`)는 `estell/`로 읽는다(`normKey`).
 - 진도 저장: Supabase 프로젝트 `english-study`(ref `zvrrhhgxcbbqiphgxnap`, 서울). 표 `progress`는 RLS로 잠겨 있고
   `get_progress`·`save_progress` 함수로만 접근한다. 기기는 32자 열쇠(`#k=`)로 같은 줄을 공유한다.

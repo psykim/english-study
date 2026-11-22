@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """구독 채널들의 영상 목록을 새로 받아 data/videos.json을 다시 만든다 (yt-dlp 필요).
-채널 추가는 CHANNELS에 한 줄. 쓰기: python3 tools/update_videos.py   → 편수 변화를 출력한다. 그 뒤 커밋·push하면 사이트에 반영된다."""
+채널 추가는 CHANNELS에 한 줄. 쓰기: python3 tools/update_videos.py   → 편수 변화를 출력한다. 그 뒤 커밋·push하면 사이트에 반영된다.
+「내가 모은 영상」 탭은 data/picks.json(묶음별 영상 열쇠)에서 만든다 — 영상 하나를 더하려면 거기에 열쇠 11자리만 넣고 다시 돌린다."""
 import datetime, json, pathlib, re, subprocess, sys
 
 CHANNELS = [
@@ -14,6 +15,7 @@ CHANNELS = [
      "title_strip": r"\s*\|\s*🎬.*$", "list_strip": r"\.zip$|\s*\|.*$"},
 ]
 OUT = pathlib.Path(__file__).resolve().parent.parent / "data" / "videos.json"
+PICKS = OUT.parent / "picks.json"
 HIDDEN = ("[Private video]", "[Deleted video]")
 
 
@@ -60,6 +62,40 @@ def channel(c, old):
             "playlists": playlists}
 
 
+def one(vid):
+    """영상 하나의 제목·길이·올린 날. 지워졌거나 비공개면 None."""
+    r = subprocess.run(["yt-dlp", "-J", "--skip-download", "--no-warnings", "--extractor-args", "youtube:lang=ko",
+                        "https://www.youtube.com/watch?v=" + vid], capture_output=True, text=True,
+                       stdin=subprocess.DEVNULL, timeout=120)
+    if r.returncode != 0:
+        return None
+    j = json.loads(r.stdout)
+    return {"id": vid, "t": j["title"], "d": int(j.get("duration") or 0), "u": j.get("upload_date") or ""}
+
+
+def picks(old):
+    """data/picks.json → 채널 하나. 이미 받은 영상은 다시 묻지 않는다(전체 목록은 올린 날 순, 묶음은 적은 순)."""
+    cfg = json.loads(PICKS.read_text())
+    known = {v["id"]: v for v in old.get("videos", []) if v.get("u")}
+    got, playlists = {}, []
+    for g in cfg["groups"]:
+        ids = []
+        for vid in g["ids"]:
+            if vid not in got:
+                v = known.get(vid) or one(vid)
+                if not v:
+                    print("  %s: 영상을 못 받았습니다(지워졌거나 비공개) — 빼고 갑니다." % vid)
+                    continue
+                got[vid] = v
+            ids.append(vid)
+        if ids:
+            playlists.append({"id": cfg["key"] + "-" + g["key"], "t": g["name"], "v": ids})
+    videos = sorted(got.values(), key=lambda v: v["u"])
+    print("%s: 영상 %d→%d · 묶음 %d개" % (cfg["name"], len(old.get("videos", [])), len(videos), len(playlists)))
+    return {"key": cfg["key"], "name": cfg["name"], "videos": videos, "shorts": [], "streams": [],
+            "playlists": playlists}
+
+
 def main():
     old = json.loads(OUT.read_text()) if OUT.exists() else {}
     olds = {c["key"]: c for c in old.get("channels", [])}
@@ -67,6 +103,8 @@ def main():
         olds["estell"] = old
     new = {"fetched": datetime.date.today().isoformat(),
            "channels": [channel(c, olds.get(c["key"], {})) for c in CHANNELS]}
+    if PICKS.exists():
+        new["channels"].append(picks(olds.get("picks", {})))
     OUT.write_text(json.dumps(new, ensure_ascii=False, separators=(",", ":")))
 
 

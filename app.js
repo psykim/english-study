@@ -204,7 +204,7 @@
     $('progBar').style.width = (ids.length ? (done / ids.length) * 100 : 0) + '%';
     $('btnResume').hidden = !firstUnseen(ids, state.v);
     const c = data.channels.find((x) => x.key === chOf(listKey));
-    $('fetched').textContent = '목록 기준일 ' + data.fetched + ' · ' + c.name + ' 영상 ' + c.videos.length + '편';
+    $('fetched').textContent = '목록 기준일 ' + data.fetched + ' · ' + c.name + ' ' + c.videos.length + '편';
   }
   // 넓은 화면은 목록만 따로 구르므로 항상 맞춰 주고, 폰은 사용자가 요청했을 때만 페이지를 옮긴다
   const wide = window.matchMedia('(min-width: 960px)');
