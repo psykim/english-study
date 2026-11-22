@@ -5,3 +5,4 @@ node_modules/
 *.log
 evidence/
 docs/plans/*.packed.html
+__pycache__/
